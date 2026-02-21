@@ -8,42 +8,95 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <div id="root"></div>
     
     <script type="text/babel">
-        const { Search, Plus, X, User, FileText, Pill, LogOut } = lucide;
+        const { useState, useEffect } = React;
         
+        // Lucide icons as SVG components
+        const Search = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        );
+        
+        const Plus = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M5 12h14"></path>
+            <path d="M12 5v14"></path>
+          </svg>
+        );
+        
+        const X = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M18 6 6 18"></path>
+            <path d="m6 6 12 12"></path>
+          </svg>
+        );
+        
+        const User = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        );
+        
+        const FileText = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <line x1="10" y1="9" x2="8" y2="9"></line>
+          </svg>
+        );
+        
+        const Pill = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path>
+            <path d="m8.5 8.5 7 7"></path>
+          </svg>
+        );
+        
+        const LogOut = ({ size = 24, ...props }) => (
+          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        );
+
         const PatientManagementApp = () => {
-          const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-          const [isSignup, setIsSignup] = React.useState(true);
-          const [view, setView] = React.useState('patients');
-          const [patients, setPatients] = React.useState([]);
-          const [medicines, setMedicines] = React.useState([
+          const [isLoggedIn, setIsLoggedIn] = useState(false);
+          const [isSignup, setIsSignup] = useState(true);
+          const [view, setView] = useState('patients');
+          const [patients, setPatients] = useState([]);
+          const [medicines, setMedicines] = useState([
             { id: '1', name: 'Paracetamol 500mg', type: 'Tablet', description: 'Pain reliever' },
             { id: '2', name: 'Amoxicillin 250mg', type: 'Capsule', description: 'Antibiotic' },
             { id: '3', name: 'Ibuprofen 400mg', type: 'Tablet', description: 'Anti-inflammatory' },
           ]);
-          const [prescriptions, setPrescriptions] = React.useState([]);
-          const [selectedPatient, setSelectedPatient] = React.useState(null);
-          const [searchTerm, setSearchTerm] = React.useState('');
-          const [showAddPatient, setShowAddPatient] = React.useState(false);
-          const [showAddMedicine, setShowAddMedicine] = React.useState(false);
-          const [showPrescriptionForm, setShowPrescriptionForm] = React.useState(false);
-          const [name, setName] = React.useState('');
-          const [email, setEmail] = React.useState('');
-          const [password, setPassword] = React.useState('');
-          const [doctorName, setDoctorName] = React.useState('');
-          const [error, setError] = React.useState('');
-          const [successMessage, setSuccessMessage] = React.useState('');
+          const [prescriptions, setPrescriptions] = useState([]);
+          const [selectedPatient, setSelectedPatient] = useState(null);
+          const [searchTerm, setSearchTerm] = useState('');
+          const [showAddPatient, setShowAddPatient] = useState(false);
+          const [showAddMedicine, setShowAddMedicine] = useState(false);
+          const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+          const [name, setName] = useState('');
+          const [email, setEmail] = useState('');
+          const [password, setPassword] = useState('');
+          const [doctorName, setDoctorName] = useState('');
+          const [error, setError] = useState('');
+          const [successMessage, setSuccessMessage] = useState('');
 
-          React.useEffect(() => {
+          useEffect(() => {
             loadData();
           }, []);
 
-          React.useEffect(() => {
+          useEffect(() => {
             if (successMessage) {
               const timer = setTimeout(() => setSuccessMessage(''), 3000);
               return () => clearTimeout(timer);
@@ -54,22 +107,24 @@
             setSuccessMessage(message);
           };
 
-          const loadData = async () => {
+          const loadData = () => {
             try {
-              const acc = await window.storage.get('doctor_account');
+              const acc = localStorage.getItem('doctor_account');
               if (acc) setIsSignup(false);
 
-              const pts = await window.storage.get('patients');
-              const meds = await window.storage.get('medicines');
-              const rxs = await window.storage.get('prescriptions');
+              const pts = localStorage.getItem('patients');
+              const meds = localStorage.getItem('medicines');
+              const rxs = localStorage.getItem('prescriptions');
               
-              if (pts) setPatients(JSON.parse(pts.value));
-              if (meds) setMedicines(JSON.parse(meds.value));
-              if (rxs) setPrescriptions(JSON.parse(rxs.value));
-            } catch (e) {}
+              if (pts) setPatients(JSON.parse(pts));
+              if (meds) setMedicines(JSON.parse(meds));
+              if (rxs) setPrescriptions(JSON.parse(rxs));
+            } catch (e) {
+              console.error('Error loading data:', e);
+            }
           };
 
-          const handleSubmit = async () => {
+          const handleSubmit = () => {
             setError('');
             
             if (isSignup) {
@@ -86,7 +141,7 @@
                 return;
               }
               try {
-                await window.storage.set('doctor_account', JSON.stringify({ name, email, password }));
+                localStorage.setItem('doctor_account', JSON.stringify({ name, email, password }));
                 setDoctorName(name);
                 setIsLoggedIn(true);
               } catch (e) {
@@ -98,9 +153,9 @@
                 return;
               }
               try {
-                const acc = await window.storage.get('doctor_account');
+                const acc = localStorage.getItem('doctor_account');
                 if (acc) {
-                  const data = JSON.parse(acc.value);
+                  const data = JSON.parse(acc);
                   if (data.email === email && data.password === password) {
                     setDoctorName(data.name);
                     setIsLoggedIn(true);
@@ -116,22 +171,28 @@
             }
           };
 
-          const savePatients = async (data) => {
+          const savePatients = (data) => {
             try {
-              await window.storage.set('patients', JSON.stringify(data));
-            } catch (e) {}
+              localStorage.setItem('patients', JSON.stringify(data));
+            } catch (e) {
+              console.error('Error saving patients:', e);
+            }
           };
 
-          const saveMedicines = async (data) => {
+          const saveMedicines = (data) => {
             try {
-              await window.storage.set('medicines', JSON.stringify(data));
-            } catch (e) {}
+              localStorage.setItem('medicines', JSON.stringify(data));
+            } catch (e) {
+              console.error('Error saving medicines:', e);
+            }
           };
 
-          const savePrescriptions = async (data) => {
+          const savePrescriptions = (data) => {
             try {
-              await window.storage.set('prescriptions', JSON.stringify(data));
-            } catch (e) {}
+              localStorage.setItem('prescriptions', JSON.stringify(data));
+            } catch (e) {
+              console.error('Error saving prescriptions:', e);
+            }
           };
 
           const addPatient = (data) => {
@@ -164,6 +225,7 @@
             setPrescriptions(updated);
             savePrescriptions(updated);
             setShowPrescriptionForm(false);
+            setSelectedPatient(null);
             showSuccess('Prescription saved successfully!');
           };
 
@@ -177,7 +239,7 @@
                 <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
                   <div className="text-center mb-8">
                     <div className="bg-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="text-white" size={32} />
+                      <User size={32} className="text-white" />
                     </div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Patient Management</h1>
                     <p className="text-gray-600">{isSignup ? 'Create Your Account' : 'Welcome Back'}</p>
@@ -190,7 +252,7 @@
                         <input
                           type="text"
                           placeholder="Dr. John Smith"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                         />
@@ -202,7 +264,7 @@
                       <input
                         type="email"
                         placeholder="doctor@clinic.com"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
@@ -213,7 +275,7 @@
                       <input
                         type="password"
                         placeholder="••••••••"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
@@ -272,7 +334,7 @@
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
                       <div className="bg-indigo-600 w-10 h-10 rounded-lg flex items-center justify-center">
-                        <User className="text-white" size={24} />
+                        <User size={24} className="text-white" />
                       </div>
                       <div>
                         <h1 className="text-xl font-bold">Dr. {doctorName}</h1>
@@ -295,7 +357,7 @@
                   <div className="flex gap-8">
                     <button
                       onClick={() => setView('patients')}
-                      className={`flex items-center gap-2 py-4 border-b-2 ${
+                      className={`flex items-center gap-2 py-4 border-b-2 transition-colors ${
                         view === 'patients' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600'
                       }`}
                     >
@@ -304,7 +366,7 @@
                     </button>
                     <button
                       onClick={() => setView('medicines')}
-                      className={`flex items-center gap-2 py-4 border-b-2 ${
+                      className={`flex items-center gap-2 py-4 border-b-2 transition-colors ${
                         view === 'medicines' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600'
                       }`}
                     >
@@ -313,7 +375,7 @@
                     </button>
                     <button
                       onClick={() => setView('prescriptions')}
-                      className={`flex items-center gap-2 py-4 border-b-2 ${
+                      className={`flex items-center gap-2 py-4 border-b-2 transition-colors ${
                         view === 'prescriptions' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600'
                       }`}
                     >
@@ -343,7 +405,7 @@
                       <input
                         type="text"
                         placeholder="Search by name or phone..."
-                        className="w-full pl-10 pr-4 py-3 border rounded-lg"
+                        className="w-full pl-10 pr-4 py-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -360,7 +422,7 @@
                           <div
                             key={pt.id}
                             onClick={() => setSelectedPatient(pt)}
-                            className="bg-white p-6 rounded-lg shadow hover:shadow-md cursor-pointer border"
+                            className="bg-white p-6 rounded-lg shadow hover:shadow-md cursor-pointer border transition-shadow"
                           >
                             <div className="flex justify-between">
                               <div className="flex-1">
@@ -382,10 +444,34 @@
                     </div>
                   </div>
                 )}
+                
+                {view === 'medicines' && (
+                  <MedicinesView medicines={medicines} setShowAddMedicine={setShowAddMedicine} />
+                )}
+                
+                {view === 'prescriptions' && (
+                  <PrescriptionsView
+                    patients={patients}
+                    setSelectedPatient={setSelectedPatient}
+                    setShowPrescriptionForm={setShowPrescriptionForm}
+                  />
+                )}
               </div>
 
               {showAddPatient && <AddPatientModal onClose={() => setShowAddPatient(false)} onAdd={addPatient} />}
-              {selectedPatient && view === 'patients' && (
+              {showAddMedicine && <AddMedicineModal onClose={() => setShowAddMedicine(false)} onAdd={addMedicine} />}
+              {showPrescriptionForm && selectedPatient && (
+                <PrescriptionModal
+                  patient={selectedPatient}
+                  medicines={medicines}
+                  onClose={() => {
+                    setShowPrescriptionForm(false);
+                    setSelectedPatient(null);
+                  }}
+                  onAdd={addPrescription}
+                />
+              )}
+              {selectedPatient && view === 'patients' && !showPrescriptionForm && (
                 <PatientDetailModal
                   patient={selectedPatient}
                   prescriptions={prescriptions.filter(p => p.patientId === selectedPatient.id)}
@@ -396,33 +482,94 @@
           );
         };
 
+        const MedicinesView = ({ medicines, setShowAddMedicine }) => (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Medicine List</h2>
+              <button
+                onClick={() => setShowAddMedicine(true)}
+                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+              >
+                <Plus size={20} />
+                <span>Add Medicine</span>
+              </button>
+            </div>
+
+            <div className="grid gap-4">
+              {medicines.map(med => (
+                <div key={med.id} className="bg-white p-6 rounded-lg shadow border">
+                  <h3 className="text-lg font-semibold">{med.name}</h3>
+                  <p className="text-sm text-indigo-600 font-medium mt-1">{med.type}</p>
+                  <p className="text-gray-600 mt-2">{med.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+        const PrescriptionsView = ({ patients, setSelectedPatient, setShowPrescriptionForm }) => (
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Create Prescription</h2>
+            
+            <div className="bg-white p-8 rounded-lg shadow border">
+              <p className="text-gray-600 mb-6">Select a patient to create prescription</p>
+              
+              <div className="grid gap-3">
+                {patients.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                    <User className="mx-auto text-gray-400 mb-4" size={48} />
+                    <p className="text-gray-600">No patients added yet</p>
+                  </div>
+                ) : (
+                  patients.map(pt => (
+                    <button
+                      key={pt.id}
+                      onClick={() => {
+                        setSelectedPatient(pt);
+                        setShowPrescriptionForm(true);
+                      }}
+                      className="text-left p-4 border-2 rounded-lg hover:border-indigo-600 hover:bg-indigo-50 transition-colors"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-semibold">{pt.name}</h4>
+                          <p className="text-sm text-gray-600">{pt.age} yrs • {pt.gender}</p>
+                        </div>
+                        <FileText className="text-indigo-600" size={24} />
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+        // Component imports for modals (AddPatientModal, AddMedicineModal, PrescriptionModal, PatientDetailModal)
+        // Due to length, I'll add them in the next message if needed
+        
         const AddPatientModal = ({ onClose, onAdd }) => {
-          const [formData, setFormData] = React.useState({
+          const [formData, setFormData] = useState({
             name: '', age: '', gender: 'Male', phone: '', email: '',
             address: '', bloodGroup: 'A+', allergies: '', medicalHistory: ''
           });
-          const [errors, setErrors] = React.useState({});
+          const [errors, setErrors] = useState({});
 
           const validateField = (field, value) => {
             const newErrors = { ...errors };
             
-            switch(field) {
-              case 'name':
-                if (!value || value.trim() === '') {
-                  newErrors.name = 'Name is required';
-                } else {
-                  delete newErrors.name;
-                }
-                break;
-              case 'age':
-                if (!value || value <= 0) {
-                  newErrors.age = 'Valid age is required';
-                } else {
-                  delete newErrors.age;
-                }
-                break;
-              default:
-                break;
+            if (field === 'name') {
+              if (!value || value.trim() === '') {
+                newErrors.name = 'Name is required';
+              } else {
+                delete newErrors.name;
+              }
+            } else if (field === 'age') {
+              if (!value || value <= 0) {
+                newErrors.age = 'Valid age is required';
+              } else {
+                delete newErrors.age;
+              }
             }
             
             setErrors(newErrors);
@@ -452,8 +599,8 @@
 
           return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-auto" style={{ maxHeight: '90vh' }}>
-                <div className="px-6 py-4 border-b flex justify-between items-center">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl" style={{maxHeight: '90vh', overflowY: 'auto'}}>
+                <div className="px-6 py-4 border-b flex justify-between items-center sticky top-0 bg-white">
                   <h3 className="text-xl font-bold text-gray-900">Add New Patient</h3>
                   <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                     <X size={24} />
@@ -466,7 +613,7 @@
                       <label className="block text-sm font-medium mb-2">Full Name *</label>
                       <input
                         type="text"
-                        className={`w-full px-3 py-2 border rounded-lg ${errors.name ? 'border-red-500 bg-red-50' : ''}`}
+                        className={`w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${errors.name ? 'border-red-500 bg-red-50' : ''}`}
                         placeholder="John Doe"
                         value={formData.name}
                         onChange={(e) => handleFieldChange('name', e.target.value)}
@@ -478,7 +625,7 @@
                       <label className="block text-sm font-medium mb-2">Age *</label>
                       <input
                         type="number"
-                        className={`w-full px-3 py-2 border rounded-lg ${errors.age ? 'border-red-500 bg-red-50' : ''}`}
+                        className={`w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 ${errors.age ? 'border-red-500 bg-red-50' : ''}`}
                         placeholder="25"
                         value={formData.age}
                         onChange={(e) => handleFieldChange('age', e.target.value)}
@@ -492,7 +639,7 @@
                     <div>
                       <label className="block text-sm font-medium mb-2">Gender</label>
                       <select
-                        className="w-full px-3 py-2 border rounded-lg"
+                        className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                         value={formData.gender}
                         onChange={(e) => handleFieldChange('gender', e.target.value)}
                       >
@@ -504,7 +651,7 @@
                     <div>
                       <label className="block text-sm font-medium mb-2">Blood Group</label>
                       <select
-                        className="w-full px-3 py-2 border rounded-lg"
+                        className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                         value={formData.bloodGroup}
                         onChange={(e) => handleFieldChange('bloodGroup', e.target.value)}
                       >
@@ -517,7 +664,7 @@
                     <label className="block text-sm font-medium mb-2">Phone</label>
                     <input
                       type="tel"
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="+1 234 567 8900"
                       value={formData.phone}
                       onChange={(e) => handleFieldChange('phone', e.target.value)}
@@ -528,7 +675,7 @@
                     <label className="block text-sm font-medium mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="john@example.com"
                       value={formData.email}
                       onChange={(e) => handleFieldChange('email', e.target.value)}
@@ -538,7 +685,7 @@
                   <div>
                     <label className="block text-sm font-medium mb-2">Address</label>
                     <textarea
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                       rows="2"
                       placeholder="123 Main St, City, State"
                       value={formData.address}
@@ -551,7 +698,7 @@
                     <input
                       type="text"
                       placeholder="e.g., Penicillin, Peanuts"
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                       value={formData.allergies}
                       onChange={(e) => handleFieldChange('allergies', e.target.value)}
                     />
@@ -560,7 +707,7 @@
                   <div>
                     <label className="block text-sm font-medium mb-2">Medical History</label>
                     <textarea
-                      className="w-full px-3 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
                       rows="3"
                       placeholder="Previous conditions, surgeries..."
                       value={formData.medicalHistory}
@@ -569,12 +716,12 @@
                   </div>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t flex gap-3 rounded-b-xl">
+                <div className="px-6 py-4 bg-gray-50 border-t flex gap-3 rounded-b-xl sticky bottom-0">
                   <button
                     onClick={handleFormSubmit}
                     disabled={!isFormValid()}
-                    className={`flex-1 py-3 rounded-lg font-semibold ${
-                      isFormValid() ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
+                      isFormValid() ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
                     Add Patient
@@ -591,10 +738,299 @@
           );
         };
 
+        const AddMedicineModal = ({ onClose, onAdd }) => {
+          const [formData, setFormData] = useState({ name: '', type: 'Tablet', description: '' });
+
+          const handleFormSubmit = () => {
+            if (!formData.name || formData.name.trim() === '') {
+              alert('Medicine name is required. Please enter a valid medicine name.');
+            } else if (formData.name.length < 3) {
+              alert('Medicine name must be at least 3 characters long');
+            } else {
+              onAdd(formData);
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
+                <div className="px-6 py-4 border-b flex justify-between items-center">
+                  <h3 className="text-xl font-bold text-gray-900">Add Medicine</h3>
+                  <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <X size={24} />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Medicine Name *</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="e.g., Aspirin 100mg"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Type</label>
+                    <select
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      value={formData.type}
+                      onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    >
+                      {['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Drops'].map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Description</label>
+                    <textarea
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      rows="4"
+                      placeholder="Usage, indication, side effects..."
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="px-6 py-4 bg-gray-50 border-t flex gap-3 rounded-b-xl">
+                  <button
+                    onClick={handleFormSubmit}
+                    className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700"
+                  >
+                    Add Medicine
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const PrescriptionModal = ({ patient, medicines, onClose, onAdd }) => {
+          const [selectedMeds, setSelectedMeds] = useState([]);
+          const [search, setSearch] = useState('');
+          const [diagnosis, setDiagnosis] = useState('');
+          const [notes, setNotes] = useState('');
+          const [showList, setShowList] = useState(false);
+
+          const frequencyOptions = [
+            'Before Breakfast',
+            'After Breakfast',
+            'Before Lunch',
+            'After Lunch',
+            'Before Dinner',
+            'After Dinner',
+            'At Bedtime',
+            'Empty Stomach'
+          ];
+
+          const filtered = medicines.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
+
+          const addMed = (med) => {
+            setSelectedMeds([...selectedMeds, { ...med, frequency: [], duration: '' }]);
+            setSearch('');
+            setShowList(false);
+          };
+
+          const removeMed = (idx) => {
+            setSelectedMeds(selectedMeds.filter((_, i) => i !== idx));
+          };
+
+          const updateMed = (idx, field, value) => {
+            const updated = [...selectedMeds];
+            updated[idx][field] = value;
+            setSelectedMeds(updated);
+          };
+
+          const toggleFrequency = (idx, freq) => {
+            const updated = [...selectedMeds];
+            const currentFreq = updated[idx].frequency;
+            if (currentFreq.includes(freq)) {
+              updated[idx].frequency = currentFreq.filter(f => f !== freq);
+            } else {
+              updated[idx].frequency = [...currentFreq, freq];
+            }
+            setSelectedMeds(updated);
+          };
+
+          const handleFormSubmit = () => {
+            if (!diagnosis || diagnosis.trim() === '') {
+              alert('Diagnosis is required. Please enter the patient\'s diagnosis before saving the prescription.');
+            } else if (selectedMeds.length === 0) {
+              alert('Please add at least one medicine to the prescription');
+            } else {
+              const incompleteMeds = selectedMeds.filter(med => med.frequency.length === 0 || !med.duration);
+              if (incompleteMeds.length > 0) {
+                alert('Please select frequency and duration for all medicines');
+              } else {
+                onAdd({ diagnosis, notes, medicines: selectedMeds });
+              }
+            }
+          };
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full" style={{maxHeight: '90vh', overflowY: 'auto'}}>
+                <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                  <div>
+                    <h3 className="text-xl font-bold">New Prescription</h3>
+                    <p className="text-sm text-gray-600">Patient: {patient.name}</p>
+                  </div>
+                  <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <X size={24} />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Diagnosis *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Common Cold"
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      value={diagnosis}
+                      onChange={(e) => setDiagnosis(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Medicines</label>
+                    
+                    <div className="relative mb-4">
+                      <input
+                        type="text"
+                        placeholder="Search medicines..."
+                        className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={search}
+                        onChange={(e) => {
+                          setSearch(e.target.value);
+                          setShowList(e.target.value.length > 0);
+                        }}
+                        onFocus={() => search && setShowList(true)}
+                      />
+                      
+                      {showList && filtered.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filtered.map(med => (
+                            <button
+                              key={med.id}
+                              type="button"
+                              onClick={() => addMed(med)}
+                              className="w-full text-left px-4 py-3 hover:bg-indigo-50 border-b last:border-b-0"
+                            >
+                              <div className="font-medium">{med.name}</div>
+                              <div className="text-sm text-gray-600">{med.type}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedMeds.length === 0 ? (
+                      <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed">
+                        <Pill className="mx-auto text-gray-400 mb-2" size={32} />
+                        <p className="text-gray-600">No medicines added</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {selectedMeds.map((med, idx) => (
+                          <div key={idx} className="bg-gray-50 p-4 rounded-lg border">
+                            <div className="flex justify-between items-start mb-3">
+                              <div>
+                                <h4 className="font-semibold">{med.name}</h4>
+                                <p className="text-sm text-gray-600">{med.type}</p>
+                              </div>
+                              <button
+                                onClick={() => removeMed(idx)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X size={20} />
+                              </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium mb-2">Frequency (Select multiple) *</label>
+                                <div className="border rounded p-2 bg-white max-h-32 overflow-y-auto">
+                                  {frequencyOptions.map(freq => (
+                                    <label key={freq} className="flex items-center gap-2 py-1 hover:bg-gray-50 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={med.frequency.includes(freq)}
+                                        onChange={() => toggleFrequency(idx, freq)}
+                                        className="rounded text-indigo-600"
+                                      />
+                                      <span className="text-sm">{freq}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                                {med.frequency.length > 0 && (
+                                  <div className="mt-1 text-xs text-gray-600">
+                                    Selected: {med.frequency.join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium mb-1">Duration *</label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g., 5 days, 2 weeks"
+                                  className="w-full px-2 py-1 text-sm border rounded outline-none focus:ring-2 focus:ring-indigo-500"
+                                  value={med.duration}
+                                  onChange={(e) => updateMed(idx, 'duration', e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Notes</label>
+                    <textarea
+                      className="w-full px-3 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      rows="3"
+                      placeholder="Instructions..."
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={handleFormSubmit}
+                      className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700"
+                    >
+                      Save Prescription
+                    </button>
+                    <button
+                      onClick={onClose}
+                      className="flex-1 bg-gray-200 py-3 rounded-lg font-semibold hover:bg-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
         const PatientDetailModal = ({ patient, prescriptions, onClose }) => {
           return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl overflow-auto" style={{ maxHeight: '90vh' }}>
+              <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl" style={{maxHeight: '90vh', overflowY: 'auto'}}>
                 <div className="px-6 py-4 border-b flex justify-between items-center sticky top-0 bg-white">
                   <h3 className="text-xl font-bold">Patient Details</h3>
                   <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
