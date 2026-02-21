@@ -1,0 +1,1092 @@
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, X, User, FileText, Pill, LogOut } from 'lucide-react';
+
+const PatientManagementApp = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isSignup, setIsSignup] = useState(true);
+  const [view, setView] = useState('patients');
+  const [patients, setPatients] = useState([]);
+  const [medicines, setMedicines] = useState([
+    { id: '1', name: 'Paracetamol 500mg', type: 'Tablet', description: 'Pain reliever' },
+    { id: '2', name: 'Amoxicillin 250mg', type: 'Capsule', description: 'Antibiotic' },
+    { id: '3', name: 'Ibuprofen 400mg', type: 'Tablet', description: 'Anti-inflammatory' },
+  ]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddPatient, setShowAddPatient] = useState(false);
+  const [showAddMedicine, setShowAddMedicine] = useState(false);
+  const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [doctorName, setDoctorName] = useState('');
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  const showSuccess = (message) => {
+    setSuccessMessage(message);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const acc = await window.storage.get('doctor_account');
+      if (acc) setIsSignup(false);
+
+      const pts = await window.storage.get('patients');
+      const meds = await window.storage.get('medicines');
+      const rxs = await window.storage.get('prescriptions');
+      
+      if (pts) setPatients(JSON.parse(pts.value));
+      if (meds) setMedicines(JSON.parse(meds.value));
+      if (rxs) setPrescriptions(JSON.parse(rxs.value));
+    } catch (e) {}
+  };
+
+  const handleSubmit = async () => {
+    setError('');
+    
+    if (isSignup) {
+      if (!name || !email || !password) {
+        setError('Please fill in all required fields: name, email, and password');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
+      if (!email.includes('@')) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      try {
+        await window.storage.set('doctor_account', JSON.stringify({ name, email, password }));
+        setDoctorName(name);
+        setIsLoggedIn(true);
+      } catch (e) {
+        setError(`Signup failed: ${e.message || 'Unable to save account data. Please try again.'}`);
+      }
+    } else {
+      if (!email || !password) {
+        setError('Please enter both email and password');
+        return;
+      }
+      try {
+        const acc = await window.storage.get('doctor_account');
+        if (acc) {
+          const data = JSON.parse(acc.value);
+          if (data.email === email && data.password === password) {
+            setDoctorName(data.name);
+            setIsLoggedIn(true);
+          } else {
+            setError('Invalid email or password. Please check your credentials and try again.');
+          }
+        } else {
+          setError('No account found. Please sign up first to create an account.');
+        }
+      } catch (e) {
+        setError(`Login failed: ${e.message || 'Unable to retrieve account data. Please try again.'}`);
+      }
+    }
+  };
+
+  const savePatients = async (data) => {
+    try {
+      await window.storage.set('patients', JSON.stringify(data));
+    } catch (e) {}
+  };
+
+  const saveMedicines = async (data) => {
+    try {
+      await window.storage.set('medicines', JSON.stringify(data));
+    } catch (e) {}
+  };
+
+  const savePrescriptions = async (data) => {
+    try {
+      await window.storage.set('prescriptions', JSON.stringify(data));
+    } catch (e) {}
+  };
+
+  const addPatient = (data) => {
+    const newPt = { id: Date.now().toString(), ...data, registrationDate: new Date().toISOString() };
+    const updated = [...patients, newPt];
+    setPatients(updated);
+    savePatients(updated);
+    setShowAddPatient(false);
+    showSuccess('Patient added successfully!');
+  };
+
+  const addMedicine = (data) => {
+    const newMed = { id: Date.now().toString(), ...data };
+    const updated = [...medicines, newMed];
+    setMedicines(updated);
+    saveMedicines(updated);
+    setShowAddMedicine(false);
+    showSuccess('Medicine added successfully!');
+  };
+
+  const addPrescription = (data) => {
+    const newRx = {
+      id: Date.now().toString(),
+      patientId: selectedPatient.id,
+      patientName: selectedPatient.name,
+      date: new Date().toISOString(),
+      ...data
+    };
+    const updated = [...prescriptions, newRx];
+    setPrescriptions(updated);
+    savePrescriptions(updated);
+    setShowPrescriptionForm(false);
+    showSuccess('Prescription saved successfully!');
+  };
+
+  const filteredPts = patients.filter(p =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.phone.includes(searchTerm)
+  );
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="bg-indigo-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <User className="text-white" size={32} />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Patient Management</h1>
+            <p className="text-gray-600">{isSignup ? 'Create Your Account' : 'Welcome Back'}</p>
+          </div>
+          
+          <div className="space-y-6">
+            {isSignup && (
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700">Doctor Name</label>
+                <input
+                  type="text"
+                  placeholder="Dr. John Smith"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+            )}
+            
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">Email</label>
+              <input
+                type="email"
+                placeholder="doctor@clinic.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">Password</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+            
+            <button
+              onClick={handleSubmit}
+              className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+              type="button"
+            >
+              {isSignup ? 'Create Account' : 'Login'}
+            </button>
+            
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignup(!isSignup);
+                  setError('');
+                  setName('');
+                  setEmail('');
+                  setPassword('');
+                }}
+                className="text-indigo-600 text-sm font-medium hover:text-indigo-700"
+              >
+                {isSignup ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="font-medium">{successMessage}</span>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-600 w-10 h-10 rounded-lg flex items-center justify-center">
+                <User className="text-white" size={24} />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">Dr. {doctorName}</h1>
+                <p className="text-sm text-gray-500">Patient Management</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsLoggedIn(false)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex gap-8">
+            <button
+              onClick={() => setView('patients')}
+              className={`flex items-center gap-2 py-4 border-b-2 ${
+                view === 'patients' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600'
+              }`}
+            >
+              <User size={20} />
+              <span>Patients</span>
+            </button>
+            <button
+              onClick={() => setView('medicines')}
+              className={`flex items-center gap-2 py-4 border-b-2 ${
+                view === 'medicines' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600'
+              }`}
+            >
+              <Pill size={20} />
+              <span>Medicines</span>
+            </button>
+            <button
+              onClick={() => setView('prescriptions')}
+              className={`flex items-center gap-2 py-4 border-b-2 ${
+                view === 'prescriptions' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-600'
+              }`}
+            >
+              <FileText size={20} />
+              <span>Prescriptions</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {view === 'patients' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Patient Records</h2>
+              <button
+                onClick={() => setShowAddPatient(true)}
+                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+              >
+                <Plus size={20} />
+                <span>Add Patient</span>
+              </button>
+            </div>
+            
+            <div className="mb-6 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search by name or phone..."
+                className="w-full pl-10 pr-4 py-3 border rounded-lg"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-4">
+              {filteredPts.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg border-2 border-dashed">
+                  <User className="mx-auto text-gray-400 mb-4" size={48} />
+                  <p className="text-gray-600">No patients yet</p>
+                </div>
+              ) : (
+                filteredPts.map(pt => (
+                  <div
+                    key={pt.id}
+                    onClick={() => setSelectedPatient(pt)}
+                    className="bg-white p-6 rounded-lg shadow hover:shadow-md cursor-pointer border"
+                  >
+                    <div className="flex justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold mb-2">{pt.name}</h3>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                          <div><span className="font-medium">Age:</span> {pt.age}</div>
+                          <div><span className="font-medium">Gender:</span> {pt.gender}</div>
+                          <div><span className="font-medium">Phone:</span> {pt.phone}</div>
+                          <div><span className="font-medium">Blood:</span> {pt.bloodGroup}</div>
+                        </div>
+                      </div>
+                      <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm h-fit">
+                        {prescriptions.filter(p => p.patientId === pt.id).length} Rx
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+        
+        {view === 'medicines' && (
+          <MedicinesView medicines={medicines} setShowAddMedicine={setShowAddMedicine} />
+        )}
+        
+        {view === 'prescriptions' && (
+          <PrescriptionsView
+            patients={patients}
+            setSelectedPatient={setSelectedPatient}
+            setShowPrescriptionForm={setShowPrescriptionForm}
+          />
+        )}
+      </div>
+
+      {showAddPatient && <AddPatientModal onClose={() => setShowAddPatient(false)} onAdd={addPatient} />}
+      {showAddMedicine && <AddMedicineModal onClose={() => setShowAddMedicine(false)} onAdd={addMedicine} />}
+      {showPrescriptionForm && selectedPatient && (
+        <PrescriptionModal
+          patient={selectedPatient}
+          medicines={medicines}
+          onClose={() => {
+            setShowPrescriptionForm(false);
+            setSelectedPatient(null);
+          }}
+          onAdd={addPrescription}
+        />
+      )}
+      {selectedPatient && view === 'patients' && (
+        <PatientDetailModal
+          patient={selectedPatient}
+          prescriptions={prescriptions.filter(p => p.patientId === selectedPatient.id)}
+          onClose={() => setSelectedPatient(null)}
+        />
+      )}
+    </div>
+  );
+};
+
+const AddPatientModal = ({ onClose, onAdd }) => {
+  const [formData, setFormData] = useState({
+    name: '', age: '', gender: 'Male', phone: '', email: '',
+    address: '', bloodGroup: 'A+', allergies: '', medicalHistory: ''
+  });
+  const [errors, setErrors] = useState({});
+
+  const validateField = (field, value) => {
+    const newErrors = { ...errors };
+    
+    switch(field) {
+      case 'name':
+        if (!value || value.trim() === '') {
+          newErrors.name = 'Name is required';
+        } else {
+          delete newErrors.name;
+        }
+        break;
+      case 'age':
+        if (!value || value <= 0) {
+          newErrors.age = 'Valid age is required';
+        } else {
+          delete newErrors.age;
+        }
+        break;
+      default:
+        break;
+    }
+    
+    setErrors(newErrors);
+    return newErrors;
+  };
+
+  const handleFieldChange = (field, value) => {
+    setFormData({...formData, [field]: value});
+    validateField(field, value);
+  };
+
+  const isFormValid = () => {
+    return formData.name && formData.name.trim() !== '' && 
+           formData.age && formData.age > 0;
+  };
+
+  const handleFormSubmit = () => {
+    const finalErrors = {
+      ...validateField('name', formData.name),
+      ...validateField('age', formData.age)
+    };
+    
+    if (Object.keys(finalErrors).length === 0) {
+      onAdd(formData);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+          <h3 className="text-xl font-bold text-gray-900">Add New Patient</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="overflow-y-auto flex-1 p-6">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Full Name *</label>
+                <input
+                  type="text"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    errors.name ? 'border-red-500 bg-red-50' : ''
+                  }`}
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  onBlur={() => validateField('name', formData.name)}
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Age *</label>
+                <input
+                  type="number"
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                    errors.age ? 'border-red-500 bg-red-50' : ''
+                  }`}
+                  placeholder="25"
+                  value={formData.age}
+                  onChange={(e) => handleFieldChange('age', e.target.value)}
+                  onBlur={() => validateField('age', formData.age)}
+                />
+                {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Gender</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={formData.gender}
+                  onChange={(e) => handleFieldChange('gender', e.target.value)}
+                >
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Blood Group</label>
+                <select
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={formData.bloodGroup}
+                  onChange={(e) => handleFieldChange('bloodGroup', e.target.value)}
+                >
+                  {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map(bg => <option key={bg}>{bg}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Phone</label>
+              <input
+                type="tel"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="+1 234 567 8900"
+                value={formData.phone}
+                onChange={(e) => handleFieldChange('phone', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <input
+                type="email"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="john@example.com"
+                value={formData.email}
+                onChange={(e) => handleFieldChange('email', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Address</label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                rows="2"
+                placeholder="123 Main St, City, State"
+                value={formData.address}
+                onChange={(e) => handleFieldChange('address', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Known Allergies</label>
+              <input
+                type="text"
+                placeholder="e.g., Penicillin, Peanuts"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={formData.allergies}
+                onChange={(e) => handleFieldChange('allergies', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Medical History</label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                rows="3"
+                placeholder="Previous conditions, surgeries..."
+                value={formData.medicalHistory}
+                onChange={(e) => handleFieldChange('medicalHistory', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 border-t flex gap-3 flex-shrink-0 rounded-b-xl">
+          <button
+            onClick={handleFormSubmit}
+            disabled={!isFormValid()}
+            className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
+              isFormValid() 
+                ? 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Add Patient
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AddMedicineModal = ({ onClose, onAdd }) => {
+  const [formData, setFormData] = useState({ name: '', type: 'Tablet', description: '' });
+
+  const handleFormSubmit = () => {
+    if (!formData.name || formData.name.trim() === '') {
+      alert('Medicine name is required. Please enter a valid medicine name.');
+    } else if (formData.name.length < 3) {
+      alert('Medicine name must be at least 3 characters long');
+    } else {
+      onAdd(formData);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+          <h3 className="text-xl font-bold text-gray-900">Add Medicine</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="overflow-y-auto flex-1 p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Medicine Name *</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., Aspirin 100mg"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Type</label>
+              <select
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={formData.type}
+                onChange={(e) => setFormData({...formData, type: e.target.value})}
+              >
+                {['Tablet', 'Capsule', 'Syrup', 'Injection', 'Cream', 'Drops'].map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">Description</label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                rows="4"
+                placeholder="Usage, indication, side effects..."
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 border-t flex gap-3 flex-shrink-0 rounded-b-xl">
+          <button
+            onClick={handleFormSubmit}
+            className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700"
+          >
+            Add Medicine
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MedicinesView = ({ medicines, setShowAddMedicine }) => (
+  <div>
+    <div className="flex justify-between items-center mb-6">
+      <h2 className="text-2xl font-bold">Medicine List</h2>
+      <button
+        onClick={() => setShowAddMedicine(true)}
+        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+      >
+        <Plus size={20} />
+        <span>Add Medicine</span>
+      </button>
+    </div>
+
+    <div className="grid gap-4">
+      {medicines.map(med => (
+        <div key={med.id} className="bg-white p-6 rounded-lg shadow border">
+          <h3 className="text-lg font-semibold">{med.name}</h3>
+          <p className="text-sm text-indigo-600 font-medium mt-1">{med.type}</p>
+          <p className="text-gray-600 mt-2">{med.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const PrescriptionsView = ({ patients, setSelectedPatient, setShowPrescriptionForm }) => (
+  <div>
+    <h2 className="text-2xl font-bold mb-6">Create Prescription</h2>
+    
+    <div className="bg-white p-8 rounded-lg shadow border">
+      <p className="text-gray-600 mb-6">Select a patient</p>
+      
+      <div className="grid gap-3">
+        {patients.map(pt => (
+          <button
+            key={pt.id}
+            onClick={() => {
+              setSelectedPatient(pt);
+              setShowPrescriptionForm(true);
+            }}
+            className="text-left p-4 border-2 rounded-lg hover:border-indigo-600 hover:bg-indigo-50"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <h4 className="font-semibold">{pt.name}</h4>
+                <p className="text-sm text-gray-600">{pt.age} yrs • {pt.gender}</p>
+              </div>
+              <FileText className="text-indigo-600" size={24} />
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const PrescriptionModal = ({ patient, medicines, onClose, onAdd }) => {
+  const [selectedMeds, setSelectedMeds] = useState([]);
+  const [search, setSearch] = useState('');
+  const [diagnosis, setDiagnosis] = useState('');
+  const [notes, setNotes] = useState('');
+  const [showList, setShowList] = useState(false);
+
+  const frequencyOptions = [
+    'Before Breakfast',
+    'After Breakfast',
+    'Before Lunch',
+    'After Lunch',
+    'Before Dinner',
+    'After Dinner',
+    'At Bedtime',
+    'Empty Stomach'
+  ];
+
+  const filtered = medicines.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
+
+  const addMed = (med) => {
+    setSelectedMeds([...selectedMeds, { ...med, frequency: [], duration: '' }]);
+    setSearch('');
+    setShowList(false);
+  };
+
+  const removeMed = (idx) => {
+    setSelectedMeds(selectedMeds.filter((_, i) => i !== idx));
+  };
+
+  const updateMed = (idx, field, value) => {
+    const updated = [...selectedMeds];
+    updated[idx][field] = value;
+    setSelectedMeds(updated);
+  };
+
+  const toggleFrequency = (idx, freq) => {
+    const updated = [...selectedMeds];
+    const currentFreq = updated[idx].frequency;
+    if (currentFreq.includes(freq)) {
+      updated[idx].frequency = currentFreq.filter(f => f !== freq);
+    } else {
+      updated[idx].frequency = [...currentFreq, freq];
+    }
+    setSelectedMeds(updated);
+  };
+
+  const handleFormSubmit = () => {
+    if (!diagnosis || diagnosis.trim() === '') {
+      alert('Diagnosis is required. Please enter the patient\'s diagnosis before saving the prescription.');
+    } else if (selectedMeds.length === 0) {
+      alert('Please add at least one medicine to the prescription');
+    } else {
+      // Check if all medicines have complete information
+      const incompleteMeds = selectedMeds.filter(med => med.frequency.length === 0 || !med.duration);
+      if (incompleteMeds.length > 0) {
+        alert('Please select frequency and duration for all medicines');
+      } else {
+        onAdd({ diagnosis, notes, medicines: selectedMeds });
+      }
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+          <div>
+            <h3 className="text-xl font-bold">New Prescription</h3>
+            <p className="text-sm text-gray-600">Patient: {patient.name}</p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="p-6 space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Diagnosis *</label>
+            <input
+              type="text"
+              placeholder="e.g., Common Cold"
+              className="w-full px-3 py-2 border rounded-lg"
+              value={diagnosis}
+              onChange={(e) => setDiagnosis(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Medicines</label>
+            
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="Search medicines..."
+                className="w-full px-3 py-2 border rounded-lg"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setShowList(e.target.value.length > 0);
+                }}
+                onFocus={() => search && setShowList(true)}
+              />
+              
+              {showList && filtered.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filtered.map(med => (
+                    <button
+                      key={med.id}
+                      type="button"
+                      onClick={() => addMed(med)}
+                      className="w-full text-left px-4 py-3 hover:bg-indigo-50 border-b last:border-b-0"
+                    >
+                      <div className="font-medium">{med.name}</div>
+                      <div className="text-sm text-gray-600">{med.type}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {selectedMeds.length === 0 ? (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed">
+                <Pill className="mx-auto text-gray-400 mb-2" size={32} />
+                <p className="text-gray-600">No medicines added</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedMeds.map((med, idx) => (
+                  <div key={idx} className="bg-gray-50 p-4 rounded-lg border">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold">{med.name}</h4>
+                        <p className="text-sm text-gray-600">{med.type}</p>
+                      </div>
+                      <button
+                        onClick={() => removeMed(idx)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-2">Frequency (Select multiple) *</label>
+                        <div className="border rounded p-2 bg-white max-h-32 overflow-y-auto">
+                          {frequencyOptions.map(freq => (
+                            <label key={freq} className="flex items-center gap-2 py-1 hover:bg-gray-50 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={med.frequency.includes(freq)}
+                                onChange={() => toggleFrequency(idx, freq)}
+                                className="rounded text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <span className="text-sm">{freq}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {med.frequency.length > 0 && (
+                          <div className="mt-1 text-xs text-gray-600">
+                            Selected: {med.frequency.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1">Duration *</label>
+                        <input
+                          type="text"
+                          placeholder="e.g., 5 days, 2 weeks"
+                          className="w-full px-2 py-1 text-sm border rounded"
+                          value={med.duration}
+                          onChange={(e) => updateMed(idx, 'duration', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Notes</label>
+            <textarea
+              className="w-full px-3 py-2 border rounded-lg"
+              rows="3"
+              placeholder="Instructions..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              onClick={handleFormSubmit}
+              className="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700"
+            >
+              Save Prescription
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-200 py-3 rounded-lg font-semibold hover:bg-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PatientDetailModal = ({ patient, prescriptions, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        <div className="px-6 py-4 border-b flex justify-between items-center flex-shrink-0">
+          <h3 className="text-xl font-bold">Patient Details</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <div className="overflow-y-auto flex-1 p-6">
+          <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg mb-6">
+            <h4 className="text-2xl font-bold mb-4">{patient.name}</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Age:</span>
+                <p className="font-semibold">{patient.age} years</p>
+              </div>
+              <div>
+                <span className="text-gray-600">Gender:</span>
+                <p className="font-semibold">{patient.gender}</p>
+              </div>
+              <div>
+                <span className="text-gray-600">Blood:</span>
+                <p className="font-semibold">{patient.bloodGroup}</p>
+              </div>
+              <div>
+                <span className="text-gray-600">Phone:</span>
+                <p className="font-semibold">{patient.phone}</p>
+              </div>
+              {patient.email && (
+                <div>
+                  <span className="text-gray-600">Email:</span>
+                  <p className="font-semibold">{patient.email}</p>
+                </div>
+              )}
+              <div>
+                <span className="text-gray-600">Registered:</span>
+                <p className="font-semibold">{new Date(patient.registrationDate).toLocaleDateString()}</p>
+              </div>
+            </div>
+            
+            {patient.address && (
+              <div className="mt-4">
+                <span className="text-gray-600">Address:</span>
+                <p className="font-semibold">{patient.address}</p>
+              </div>
+            )}
+            
+            {patient.allergies && (
+              <div className="mt-4">
+                <span className="text-red-600 font-medium">⚠️ Allergies:</span>
+                <p className="font-semibold text-red-800 mt-1">{patient.allergies}</p>
+              </div>
+            )}
+            
+            {patient.medicalHistory && (
+              <div className="mt-4">
+                <span className="text-gray-600">History:</span>
+                <p className="mt-1">{patient.medicalHistory}</p>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h4 className="text-lg font-bold mb-4">Prescription History ({prescriptions.length})</h4>
+            
+            {prescriptions.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
+                <FileText className="mx-auto text-gray-400 mb-4" size={48} />
+                <p className="text-gray-600">No prescriptions yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {prescriptions.sort((a, b) => new Date(b.date) - new Date(a.date)).map(rx => (
+                  <div key={rx.id} className="bg-white border-2 rounded-lg p-5">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h5 className="font-bold">{rx.diagnosis}</h5>
+                        <p className="text-sm text-gray-600">
+                          {new Date(rx.date).toLocaleDateString()} at {new Date(rx.date).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <p className="text-sm font-medium mb-2">Medicines:</p>
+                      <div className="space-y-2">
+                        {rx.medicines.map((med, idx) => (
+                          <div key={idx} className="bg-indigo-50 p-3 rounded">
+                            <p className="font-semibold">{med.name}</p>
+                            <p className="text-sm text-gray-700 mt-1">
+                              <span className="font-medium">When:</span> {Array.isArray(med.frequency) ? med.frequency.join(', ') : med.frequency}
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              <span className="font-medium">Duration:</span> {med.duration}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {rx.notes && (
+                      <div className="bg-amber-50 border-l-4 border-amber-400 p-3 rounded">
+                        <p className="text-sm font-medium text-amber-900">Notes:</p>
+                        <p className="text-sm text-amber-800 mt-1">{rx.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 border-t flex justify-end flex-shrink-0 rounded-b-xl">
+          <button
+            onClick={onClose}
+            className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-indigo-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PatientManagementApp;
